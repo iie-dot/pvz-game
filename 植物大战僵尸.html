@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>植物大战僵尸</title>
+    <style>
+        #container {
+            width: 900px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #bg {
+            margin-left: -150px
+        }
+
+        .card {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+        }
+
+        /* 阳光计数显示 */
+        #sunCounter {
+            position: absolute;
+            left: 10px;
+            top: 120px;
+            z-index: 100;
+            font-size: 20px;
+            font-weight: bold;
+            color: #FFD700;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-image: url('images/Sunback.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            padding: 8px 15px;
+            min-width: 80px;
+            height: 35px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        /* 【需要图片】阳光背景图，放在 images/Sunback.png */
+
+        #sunCounter img {
+            width: 25px;
+            height: 25px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <img id="bg" src="images/Background.jpg" />
+
+        <!-- 阳光计数器 -->
+        <div id="sunCounter">
+            <img src="images/Sun.png" alt="阳光" />
+            <span id="sunCount">150</span>
+        </div>
+        <!-- 【需要图片】阳光小图标，放在 images/Sun.png -->
+
+        <!-- 豌豆射手 type=1 价格100 -->
+        <img class="card" onclick="dragPlant(1)" src="images/Peashooter.png" alt="豌豆射手" />
+        <!-- 寒冰射手 type=2 价格175 -->
+        <img class="card" style="left: 100px;" onclick="dragPlant(2)" src="images/SnowPea.png" alt="寒冰射手" />
+        <!-- 双发射手 type=3 价格200 -->
+        <img class="card" style="left: 200px;" onclick="dragPlant(3)" src="images/Repeater.png" alt="双发射手" />
+        <!-- 向日葵 type=4 价格50 -->
+        <img class="card" style="left: 300px;" onclick="dragPlant(4)" src="images/SunFlower.png" alt="向日葵" />
+        <!-- 高坚果 type=5 价格175 -->
+        <img class="card" style="left: 400px;" onclick="dragPlant(5)" src="images/TallNut.png" alt="高坚果" />
+        <!-- 火爆辣椒 type=6 价格150 -->
+        <img class="card" style="left: 500px;" onclick="dragPlant(6)" src="images/Jalapeno.png" alt="火爆辣椒" />
+    </div>
+    <script src="sprites.js"></script>
+    <script>
+        var zombies = []
+        var zbIndex = 0
+        var counter = 0
+        var duration = 1000
+        var plants = []
+        var bullets = []
+        var zbDieNo = 0
+
+        // 阳光系统
+        var sunCount = 500
+        var sunCountElement = document.getElementById('sunCount')
+
+        // 植物价格表
+        var plantPrices = {
+            1: 100,
+            2: 175,
+            3: 200,
+            4: 50,
+            5: 175,
+            6: 150
+        }
+
+        function shoot(plant) {
+            for (var zombie of zombies) {
+                if (zombie.route == plant.route) {
+                    bullets.push(createBullet(plant, bullet => {
+                        bullets = bullets.filter(item => item != bullet)
+                        container.removeChild(bullet)
+                    }))
+                    break
+                }
+            }
+        }
+
+        function dragPlant(type) {
+            if (sunCount < plantPrices[type]) {
+                alert('阳光不足！需要' + plantPrices[type] + '点阳光，当前只有' + sunCount + '点')
+                return
+            }
+
+            createPlant(type, plant => {
+                sunCount -= plantPrices[type]
+                updateSunDisplay()
+
+                if (type == 5) {
+                    plants.push(plant)
+                    return
+                }
+                if (type == 6) {
+                    jalapenoBurn(plant)
+                    return
+                }
+                if (type == 4) {
+                    plant.timer = setInterval(() => {
+                        produceSun(plant)
+                    }, 10000)
+                    produceSun(plant)
+                    plants.push(plant)
+                    return
+                }
+                plant.timer = setInterval(() => {
+                    shoot(plant)
+                }, 2000)
+                if (type == 3) {
+                    setTimeout(() => {
+                        plant.timer2 = setInterval(() => {
+                            shoot(plant)
+                        }, 2000)
+                        shoot(plant)
+                    }, 100)
+                }
+                shoot(plant)
+                plants.push(plant)
+            })
+        }
+
+        function updateSunDisplay() {
+            sunCountElement.textContent = sunCount
+        }
+
+        function addSun(amount) {
+            sunCount += amount
+            updateSunDisplay()
+        }
+
+        document.onvisibilitychange = function () {
+            isBack = document.visibilityState != 'visible';
+        }
+        window.onload = function () {
+            setInterval(() => {
+                if (!window.isBack) {
+                    addSprites()
+                    spriteStep()
+                    onHitting()
+                }
+            }, 100 / 8)
+        }
+
+        function addSprites() {
+            if (zbIndex > 20) {
+                return
+            }
+            counter++
+            if (parseInt(counter / duration) >= zbIndex) {
+                zombies.push(createZombie(zbIndex, () => {
+                    alert('戴夫的脑袋被僵尸吃掉了')
+                    location.reload()
+                }))
+                if (zbIndex == 2) {
+                    duration = 100
+                    counter = duration * zbIndex
+                }
+                if (zbIndex == 10) {
+                    duration = 2000
+                    counter = duration * zbIndex
+                }
+                if (zbIndex == 11) {
+                    duration = 100
+                    counter = duration * zbIndex
+                }
+                zbIndex++
+            }
+        }
+
+        function spriteStep() {
+            for (var zombie of zombies) {
+                zombie.step()
+            }
+            for (var bullet of bullets) {
+                bullet.step()
+            }
+        }
+
+        function onHitting() {
+            for (var bullet of bullets) {
+                if (hitZombie(bullet)) {
+                    bullet.src = 'images/BulletHit.gif'
+                }
+            }
+
+            for (var zombie of zombies) {
+                var plant = eatPlantBy(zombie)
+                if (plant && zombie.src.endsWith('Zombie.gif')) {
+                    if (zombie.blood < 10) {
+                        zombie.src = 'images/ZombieAttack.gif'
+                    } else if (zombie.status == 5) {
+                        zombie.src = 'images/BucketheadZombieAttack.gif'
+                    } else {
+                        zombie.src = 'images/ConeheadZombieAttack.gif'
+                    }
+                    plant.attack.push(zombie)
+                }
+                else if (plant && plant.blood == 0) {
+                    if (plant.timer) {
+                        clearInterval(plant.timer)
+                    }
+                    if (plant.timer2) {
+                        clearInterval(plant.timer2)
+                    }
+                    plants.splice(plant.index, 1)
+                    container.removeChild(plant)
+                    for (var zz of plant.attack) {
+                        if (zz && zz.blood > 0 && zz.blood < 10) {
+                            zz.src = 'images/Zombie.gif'
+                        } else if (zz && zz.blood > 0 && zz.status == 5) {
+                            zz.src = 'images/BucketheadZombie.gif'
+                        } else if (zz && zz.blood > 0) {
+                            zz.src = 'images/ConeheadZombie.gif'
+                        }
+                    }
+                } else if (plant) {
+                    plant.blood--
+                    if (plant.type == 5) {
+                        updateTallnutAppearance(plant)
+                    }
+                }
+            }
+        }
+
+        function eatPlantBy(zombie) {
+            for (var i in plants) {
+                var plant = plants[i];
+                if (plant.offsetLeft - 40 > zombie.offsetLeft &&
+                    plant.offsetLeft - 100 < zombie.offsetLeft &&
+                    plant.route == zombie.route) {
+                    plant.index = i;
+                    return plant;
+                }
+            }
+            return null;
+        }
+
+        function hitZombie(bullet) {
+            for (var zombie of zombies) {
+                if (bullet.offsetLeft - 70 > zombie.offsetLeft &&
+                    bullet.offsetLeft - 140 < zombie.offsetLeft &&
+                    bullet.route == zombie.route) {
+                    zombie.blood--
+                    if (bullet.type == 2) {
+                        zombie.speed = 10
+                    }
+                    if (zombie.blood == 9) {
+                        zombie.src = zombie.src.endsWith('Zombie.gif') ?
+                            'images/Zombie.gif' : 'images/ZombieAttack.gif'
+                    }
+                    if (zombie.blood == 0) {
+                        var head = createHead(zombie)
+                        zombie.src = zombie.src.endsWith('Zombie.gif') ?
+                            'images/ZombieLostHead.gif' : 'images/ZombieLostHeadAttack.gif'
+                        setTimeout(() => {
+                            zombie.src = 'images/ZombieDie.gif'
+                            container.removeChild(head)
+                        }, 1000)
+                        setTimeout(() => {
+                            zombieDie(zombie)
+                        }, 2000)
+                    } else {
+                        zombie.style.opacity = 0.7
+                        setTimeout(() => {
+                            zombie.style.opacity = 1
+                        }, 100)
+                    }
+                    return true
+                }
+            }
+            return false
+        }
+
+        function zombieDie(zombie) {
+            zombies = zombies.filter(item => item != zombie)
+            container.removeChild(zombie)
+            zbDieNo++
+            if (zbDieNo > 20) {
+                alert('恭喜您过关，请玩下一关')
+                location.reload()
+            }
+        }
+
+        function updateTallnutAppearance(plant) {
+            if (plant.type != 5) return
+            var maxBlood = plant.maxBlood || 400
+            var currentBlood = plant.blood
+            var ratio = currentBlood / maxBlood
+            if (ratio > 0.5) {
+                plant.src = 'images/TallNut.gif'
+            } else if (ratio > 0.25 && ratio <= 0.5) {
+                plant.src = 'images/TallnutCracked1.gif'
+            } else if (ratio <= 0.25) {
+                plant.src = 'images/TallnutCracked2.gif'
+            }
+        }
+
+        function produceSun(plant) {
+            if (typeof createSun === 'function') {
+                createSun(plant)
+            }
+        }
+
+        function jalapenoBurn(plant) {
+            var route = plant.route
+            plant.src = 'images/JalapenoExplode.gif'
+            plant.style.zIndex = '20'
+            plant.style.width = '120px'
+            plant.style.height = '120px'
+            plant.style.left = (plant.offsetLeft - 30) + 'px'
+            plant.style.top = (plant.offsetTop - 30) + 'px'
+
+            var fireLine = document.createElement('img')
+            fireLine.src = 'images/JalapenoExplode.gif'
+            fireLine.style.position = 'absolute'
+            fireLine.style.left = '0px'
+            fireLine.style.top = plant.style.top
+            fireLine.style.width = '900px'
+            fireLine.style.height = '120px'
+            fireLine.style.opacity = '0.5'
+            fireLine.style.zIndex = '15'
+            container.appendChild(fireLine)
+
+            for (var zombie of zombies) {
+                if (zombie.route == route) {
+                    zombie.src = 'images/BoomDie.gif'
+                    zombie.style.zIndex = '25'
+                    zombie.speed = 9999
+                    setTimeout(() => {
+                        zombieDie(zombie)
+                    }, 1500)
+                }
+            }
+
+            setTimeout(() => {
+                container.removeChild(fireLine)
+            }, 800)
+
+            setTimeout(() => {
+                container.removeChild(plant)
+            }, 1000)
+
+            setTimeout(() => {
+                plants = plants.filter(item => item != plant)
+            }, 1000)
+        }
+    </script>
+</body>
+</html>
