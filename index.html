@@ -43,7 +43,6 @@
             height: 35px;
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
         }
-        /* 【需要图片】阳光背景图，放在 images/Sunback.png */
 
         #sunCounter img {
             width: 25px;
@@ -59,23 +58,18 @@
         <!-- 阳光计数器 -->
         <div id="sunCounter">
             <img src="images/Sun.png" alt="阳光" />
-            <span id="sunCount">150</span>
+            <span id="sunCount">500</span>
         </div>
-        <!-- 【需要图片】阳光小图标，放在 images/Sun.png -->
 
-        <!-- 豌豆射手 type=1 价格100 -->
+        <!-- 植物卡片 -->
         <img class="card" onclick="dragPlant(1)" src="images/Peashooter.png" alt="豌豆射手" />
-        <!-- 寒冰射手 type=2 价格175 -->
         <img class="card" style="left: 100px;" onclick="dragPlant(2)" src="images/SnowPea.png" alt="寒冰射手" />
-        <!-- 双发射手 type=3 价格200 -->
         <img class="card" style="left: 200px;" onclick="dragPlant(3)" src="images/Repeater.png" alt="双发射手" />
-        <!-- 向日葵 type=4 价格50 -->
         <img class="card" style="left: 300px;" onclick="dragPlant(4)" src="images/SunFlower.png" alt="向日葵" />
-        <!-- 高坚果 type=5 价格175 -->
         <img class="card" style="left: 400px;" onclick="dragPlant(5)" src="images/TallNut.png" alt="高坚果" />
-        <!-- 火爆辣椒 type=6 价格150 -->
         <img class="card" style="left: 500px;" onclick="dragPlant(6)" src="images/Jalapeno.png" alt="火爆辣椒" />
     </div>
+
     <script src="sprites.js"></script>
     <script>
         var zombies = []
