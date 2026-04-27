@@ -17,22 +17,16 @@ function createPlant(type, onclick) {
         plant.blood = 500
     }
     else if (type == 4) {
-        // 向日葵
         plant.src = 'images/SunFlower.gif'
-        // 【需要图片】向日葵本体动画，放在 images/SunFlower.gif
         plant.blood = 300
     }
     else if (type == 5) {
-        // 高坚果 - 高血量阻挡
         plant.src = 'images/TallNut.gif'
-        // 【需要图片】高坚果完好图，放在 images/TallNut.gif
-        plant.blood = 400  // 高血量
-        plant.maxBlood = 400  // 记录最大血量用于计算受损比例
+        plant.blood = 400
+        plant.maxBlood = 400
     }
     else if (type == 6) {
-        // 火爆辣椒 - 一次性植物
         plant.src = 'images/Jalapeno.gif'
-        // 【需要图片】火爆辣椒本体，放在 images/Jalapeno.gif
         plant.blood = 999
     }
     plant.style.position = 'absolute'
@@ -71,8 +65,8 @@ function createPlant(type, onclick) {
                 plant.route = 4;
             }
             
-            // 高坚果特殊处理：向上偏移一些，避免体积太大出格子
-            if (type == 5) {
+            // 高坚果特殊处理：向上偏移（修复：用 plant.type 而不是 type）
+            if (plant.type == 5) {
                 plant.style.top = (parseInt(plant.style.top) - 20) + 'px'
             }
             
@@ -156,11 +150,9 @@ function createHead(zombie) {
     return head
 }
 
-// ============ 阳光创建函数 ============
 function createSun(plant) {
     var sun = document.createElement('img')
     sun.src = 'images/Sun.png'
-    // 【需要图片】阳光图片，放在 images/Sun.png
     sun.style.position = 'absolute'
     sun.style.left = plant.offsetLeft + 'px'
     sun.style.top = plant.offsetTop - 10 + 'px'
@@ -168,12 +160,11 @@ function createSun(plant) {
     sun.style.height = '50px'
     sun.style.cursor = 'pointer'
     sun.style.zIndex = '10'
-    
-    // 阳光掉落动画
+
     var targetTop = plant.offsetTop + 60
     var currentTop = plant.offsetTop - 10
     var fallSpeed = 1
-    
+
     sun.fallInterval = setInterval(function () {
         if (currentTop < targetTop) {
             currentTop += fallSpeed
@@ -182,20 +173,17 @@ function createSun(plant) {
             clearInterval(sun.fallInterval)
         }
     }, 20)
-    
-    // 点击阳光收集（每个阳光+25）
+
     sun.onclick = function () {
         if (sun.fallInterval) {
             clearInterval(sun.fallInterval)
         }
         container.removeChild(sun)
-        // 增加阳光计数
         if (typeof addSun === 'function') {
             addSun(25)
         }
     }
-    
-    // 阳光自动消失（10秒）
+
     setTimeout(() => {
         if (sun.parentNode) {
             if (sun.fallInterval) {
@@ -204,7 +192,7 @@ function createSun(plant) {
             container.removeChild(sun)
         }
     }, 10000)
-    
+
     container.appendChild(sun)
     return sun
 }
